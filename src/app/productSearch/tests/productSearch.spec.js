@@ -1,115 +1,92 @@
 describe('Component: Product Search', function(){
-    var scope,
-        q,
-        oc,
-        state,
-        _ocParameters,
-        parameters,
-        mockProductList
-        ;
-    beforeEach(module(function($provide) {
-        $provide.value('Parameters', {searchTerm: null, page: null,  pageSize: null, sortBy: null});
-    }));
-    beforeEach(module('orderCloud'));
-    beforeEach(module('orderCloud.sdk'));
-    beforeEach(inject(function($rootScope, $q, OrderCloud, ocParameters, $state, Parameters){
-        scope = $rootScope.$new();
-        q = $q;
-        oc = OrderCloud;
-        state = $state;
-        _ocParameters = ocParameters;
-        parameters = Parameters;
-        mockProductList = {
-            Items:['product1', 'product2'],
-            Meta:{
-                ItemRange:[1, 3],
-                TotalCount: 50
-            }
-        };
-    }));
     describe('State: productSearchResults', function(){
-        var state;
-        beforeEach(inject(function($state){
-            state = $state.get('productSearchResults');
-            spyOn(_ocParameters, 'Get');
+        var productSearchState;
+        beforeEach(function(){
+            productSearchState = state.get('productSearchResults');
+            spyOn(ocParametersService, 'Get');
             spyOn(oc.Me, 'ListProducts');
-        }));
-        it('should resolve Parameters', inject(function($injector){
-            $injector.invoke(state.resolve.Parameters);
-            expect(_ocParameters.Get).toHaveBeenCalled();
-        }));
-        it('should resolve ProductList', inject(function($injector){
-            parameters.filters = {ParentID:'12'};
-            $injector.invoke(state.resolve.ProductList);
+        });
+        it('should resolve Parameters', function(){
+            injector.invoke(productSearchState.resolve.Parameters);
+            expect(ocParametersService.Get).toHaveBeenCalled();
+        });
+        it('should resolve ProductList', function(){
+            parametersResolve.filters = {ParentID:'12'};
+            injector.invoke(productSearchState.resolve.ProductList);
             expect(oc.Me.ListProducts).toHaveBeenCalled();
-        }));
+        });
     });
     describe('Controller: ProductSearchController', function(){
         var productSearchCtrl;
-        beforeEach(inject(function($state, $controller){
-            var state = $state;
+        beforeEach(inject(function($controller){
             productSearchCtrl = $controller('ProductSearchCtrl', {
-                $state: state,
-                ocParameters: _ocParameters,
+                ocParameters: ocParametersService,
                 $scope: scope,
-                ProductList: mockProductList
+                ProductList: {
+                    Items:['product1', 'product2'],
+                    Meta:{
+                        ItemRange:[1, 3],
+                        TotalCount: 50
+                    }
+                }
             });
-            spyOn(_ocParameters, 'Create');
             spyOn(state, 'go');
+            spyOn(ocParametersService, 'Create');
         }));
         describe('filter', function(){
             it('should reload state and call ocParameters.Create with any parameters', function(){
-                productSearchCtrl.parameters = {pageSize: 1};
                 productSearchCtrl.filter(true);
                 expect(state.go).toHaveBeenCalled();
-                expect(_ocParameters.Create).toHaveBeenCalledWith({pageSize:1}, true);
+                expect(ocParametersService.Create).toHaveBeenCalledWith(mock.Parameters, true);
             });
         });
         describe('updateSort', function(){
             it('should reload page with value and sort order, if both are defined', function(){
+                mock.Parameters.sortBy = '!ID';
                 productSearchCtrl.updateSort('!ID');
                 expect(state.go).toHaveBeenCalled();
-                expect(_ocParameters.Create).toHaveBeenCalledWith({searchTerm: null, page: null,  pageSize: null, sortBy: '!ID'}, false);
+                expect(ocParametersService.Create).toHaveBeenCalledWith(mock.Parameters, false);
             });
             it('should reload page with just value, if no order is defined', function(){
+                mock.Parameters.sortBy = 'ID';
                 productSearchCtrl.updateSort('ID');
                 expect(state.go).toHaveBeenCalled();
-                expect(_ocParameters.Create).toHaveBeenCalledWith({searchTerm: null, page: null,  pageSize: null, sortBy: 'ID'}, false);
+                expect(ocParametersService.Create).toHaveBeenCalledWith(mock.Parameters, false);
             });
         });
         describe('updatePageSize', function(){
             it('should reload state with the new pageSize', function(){
+                mock.Parameters.pageSize = '25';
                 productSearchCtrl.updatePageSize('25');
                 expect(state.go).toHaveBeenCalled();
-                expect(_ocParameters.Create).toHaveBeenCalledWith({searchTerm: null, page: null,  pageSize: '25', sortBy: null}, true);
+                expect(ocParametersService.Create).toHaveBeenCalledWith(mock.Parameters, true);
             });
         });
         describe('pageChanged', function(){
             it('should reload state with the new page', function(){
+                mock.Parameters.page = 'newPage';
                 productSearchCtrl.pageChanged('newPage');
                 expect(state.go).toHaveBeenCalled();
-                expect(_ocParameters.Create).toHaveBeenCalledWith({searchTerm: null, page: 'newPage',  pageSize: null, sortBy: null}, false);
+                expect(ocParametersService.Create).toHaveBeenCalledWith(mock.Parameters, false);
             });
         });
         describe('reverseSort', function(){
             it('should reload state with a reverse sort call', function(){
-                productSearchCtrl.parameters.sortBy = 'ID';
+                mock.Parameters.sortBy = '!ID';
                 productSearchCtrl.reverseSort();
-                expect(_ocParameters.Create).toHaveBeenCalledWith({searchTerm: null, page: null,  pageSize: null, sortBy: '!ID'}, false);
+                expect(ocParametersService.Create).toHaveBeenCalledWith(mock.Parameters, false);
             });
         });
     });
     describe('Component Directive: ordercloudProductSearch', function(){
         var productSearchComponentCtrl,
-        timeout
+            catalogID
         ;
-        beforeEach(inject(function($componentController, $timeout){
-            timeout = $timeout;
+        beforeEach(inject(function($componentController, catalogid){
+            catalogID = catalogid;
             productSearchComponentCtrl = $componentController('ordercloudProductSearch', {
-                $state:state,
-                $timeout: timeout,
-                $scope: scope,
-                OrderCloud:oc
+                searchTerm: 'product1',
+                maxProducts: 12
             });
             spyOn(state, 'go');
         }));
@@ -120,15 +97,26 @@ describe('Component: Product Search', function(){
                 spyOn(oc.Me, 'ListProducts').and.returnValue(defer.promise);
             });
             it('should call Me.ListProducts with given search term and max products', function(){
-                productSearchComponentCtrl.searchTerm = 'Product1';
-                productSearchComponentCtrl.maxProducts = 12;
+                mock.Parameters = {
+                    catalogID: catalogID,
+                    search: productSearchComponentCtrl.searchTerm,
+                    page: 1,
+                    pageSize: 5,
+                    depth: 'all'
+                };
                 productSearchComponentCtrl.getSearchResults();
-                expect(oc.Me.ListProducts).toHaveBeenCalledWith('Product1', 1, 12);
+                expect(oc.Me.ListProducts).toHaveBeenCalledWith(mock.Parameters);
             });
             it('should default max products to five, if none is provided', function(){
-                productSearchComponentCtrl.searchTerm = 'Product1';
+                mock.Parameters = {
+                    catalogID: catalogID,
+                    search: productSearchComponentCtrl.searchTerm,
+                    page: 1,
+                    pageSize: 5,
+                    depth: 'all'
+                };
                 productSearchComponentCtrl.getSearchResults();
-                expect(oc.Me.ListProducts).toHaveBeenCalledWith('Product1', 1, 5);
+                expect(oc.Me.ListProducts).toHaveBeenCalledWith(mock.Parameters);
             });
         });
         describe('onSelect', function(){
