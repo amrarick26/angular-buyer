@@ -34,7 +34,7 @@ describe('Component: ProductBrowse', function(){
             expect(oc.Me.ListCategories).toHaveBeenCalledWith(mock.Parameters);
         });
     });
-    fdescribe('State: productBrowse.products', function(){
+    describe('State: productBrowse.products', function(){
         var productBrowseProductsState;
         beforeEach(function(){
             productBrowseProductsState = state.get('productBrowse.products');
