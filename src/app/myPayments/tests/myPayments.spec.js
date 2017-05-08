@@ -1,5 +1,4 @@
 describe('Component: myPayments', function() {
-    var uibModalInstance = jasmine.createSpyObj('modalInstance', ['close', 'dismiss', 'result.then']);
     describe('State: myPayments', function() {
         var myPaymentsState;
         beforeEach(function() {
