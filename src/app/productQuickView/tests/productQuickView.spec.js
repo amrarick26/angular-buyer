@@ -47,26 +47,30 @@ describe('Component: Product Quick View', function() {
 
     describe('Controller: ProductQuickViewController', function() {
         var productQuickViewCtrl,
-            lineItemsService;
+            lineItemHelpers;
         beforeEach(inject(function($controller, ocLineItems) {
-            lineItemsService = ocLineItems;
+            lineItemHelpers = ocLineItems;
             productQuickViewCtrl = $controller('ProductQuickViewCtrl', {
                 $uibModalInstance: uibModalInstance,
                 SelectedProduct: mock.Product,
-                CurrentOrder: mock.Order,
-                ocLineItems: lineItemsService
-            })
+                CurrentOrder: mock.Order
+            });
         }));
+
         describe('addToCart', function() {
             beforeEach(function() {
-                spyOn(lineItemsService, 'AddItem').and.callThrough;
+                var defer =  q.defer();
+                defer.resolve();
+                spyOn(lineItemHelpers, 'AddItem').and.returnValue(defer.promise);
+                spyOn(toastrService, 'success');
                 productQuickViewCtrl.addToCart();
             });
             it('should add line items to the current order', function() {
-                expect(lineItemsService.AddItem).toHaveBeenCalledWith(CurrentOrder, SelectedProduct)
+                expect(lineItemHelpers.AddItem).toHaveBeenCalledWith(mock.Order, mock.Product)
             });
             it('should call toastr success', function() {
-                expect(toastr.success).toHaveBeenCalledWith('Product successfully added to your cart.');
+                scope.$digest();
+                expect(toastrService.success).toHaveBeenCalled();
             });
             it('should close the modal', function() {
                 expect(uibModalInstance.close).toHaveBeenCalled();
