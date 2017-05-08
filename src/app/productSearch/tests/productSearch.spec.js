@@ -1,4 +1,5 @@
 describe('Component: Product Search', function(){
+    var uibModalInstance = jasmine.createSpyObj('modalInstance', ['close', 'dismiss', 'result.then']);
     describe('State: productSearchResults', function(){
         var productSearchState;
         beforeEach(function(){
