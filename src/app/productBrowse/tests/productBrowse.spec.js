@@ -1,71 +1,54 @@
 describe('Component: ProductBrowse', function(){
-    var oc,
-        parameters,
-        currentUser,
-        productList,
-        categoryList;
-    beforeEach(module('orderCloud'));
-    beforeEach(module('orderCloud.sdk'));
-    beforeEach(module(function($provide) {
-        $provide.value('Parameters', {search:null, page: null, pageSize: null, searchOn: null, sortBy: null, userID: null, userGroupID: null, level: null, buyerID: null})
-        $provide.value('CurrentUser', {});
-        $provide.value('ProductList', {});
-        $provide.value('CategoryList', {});
-    }));
-    beforeEach(inject(function(OrderCloud, Parameters, ProductList, CategoryList){
-        oc = OrderCloud;
-        parameters = Parameters;
-        currentUser = {
-            ID: "U01",
-            Username: "User01",
-            FirstName: "Test",
-            LastName: "User 01",
-            Email: "test@four51.com",
-            Phone: "5555555555",
-            TermsAccepted: null,
-            Active: true,
-            xp: {
-                FavoriteProducts: []
-            },
-            AvailableRoles: [
-                "FullAccess"
-            ]
-        };
-        productList = ProductList;
-        categoryList = CategoryList;
-    }));
+    //var productList,
+    //    categoryList;
+    //beforeEach(module(function($provide) {
+    //    $provide.value('ProductList', {});
+    //    $provide.value('CategoryList', {});
+    //}));
+    //beforeEach(function(ProductList, CategoryList){
+    //    productList = ProductList;
+    //    categoryList = CategoryList;
+    //});
 
     describe('State: productBrowse', function(){
-        var state;
-        beforeEach(inject(function($state, ocParameters){
-            state = $state.get('productBrowse');
-            spyOn(ocParameters, 'Get').and.returnValue(null);
+        var productBrowseState,
+            catalogID;
+        beforeEach(inject(function(catalogid){
+            catalogID = catalogid;
+            productBrowseState = state.get('productBrowse');
+            spyOn(ocParametersService, 'Get').and.returnValue(null);
             spyOn(oc.Me, 'ListCategories').and.returnValue(null);
         }));
-        it('should resolve Parameters', inject(function($injector, ocParameters){
-            $injector.invoke(state.resolve.Parameters);
-            expect(ocParameters.Get).toHaveBeenCalled();
-        }));
-        it('should resolve CategoryList', inject(function($injector){
-            $injector.invoke(state.resolve.CategoryList);
-            expect(oc.Me.ListCategories).toHaveBeenCalledWith(null, 1, 100, null, null, null, 'all');
-        }));
+        it('should resolve Parameters', function(){
+            injector.invoke(productBrowseState.resolve.Parameters);
+            expect(ocParametersService.Get).toHaveBeenCalled();
+        });
+        it('should resolve CategoryList', function(){
+            mock.Parameters = {
+                page: 1,
+                pageSize: 100,
+                depth: 'all',
+                catalogID: catalogID
+            };
+            injector.invoke(productBrowseState.resolve.CategoryList);
+            expect(oc.Me.ListCategories).toHaveBeenCalledWith(mock.Parameters);
+        });
     });
-    describe('State: productBrowse.products', function(){
-        var state;
-        beforeEach(inject(function($state, ocParameters){
-            state = $state.get('productBrowse.products');
-            spyOn(ocParameters, 'Get').and.returnValue(null);
+    fdescribe('State: productBrowse.products', function(){
+        var productBrowseProductsState;
+        beforeEach(function(){
+            productBrowseProductsState = state.get('productBrowse.products');
+            spyOn(ocParametersService, 'Get').and.returnValue(null);
             spyOn(oc.Me, 'ListProducts').and.returnValue(null);
-        }));
-        it('should resolve Parameters', inject(function($injector, ocParameters){
-            $injector.invoke(state.resolve.Parameters);
-            expect(ocParameters.Get).toHaveBeenCalled();
-        }));
-        it('should resolve ProductList', inject(function($injector){
-            $injector.invoke(state.resolve.ProductList);
-            expect(oc.Me.ListProducts).toHaveBeenCalledWith(parameters.search, parameters.page, parameters.pageSize, parameters.searchOn, parameters.sortBy, parameters.filters, parameters.categoryid);
-        }));
+        });
+        it('should resolve Parameters', function(){
+            injector.invoke(productBrowseProductsState.resolve.Parameters);
+            expect(ocParametersService.Get).toHaveBeenCalled();
+        });
+        it('should resolve ProductList', function(){
+            injector.invoke(productBrowseProductsState.resolve.ProductList);
+            expect(oc.Me.ListProducts).toHaveBeenCalledWith(mock.Parameters);
+        });
     });
     //describe('Controller: ProductViewCtrl', function(){
     //    var productViewCtrl;
