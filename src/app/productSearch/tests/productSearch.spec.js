@@ -21,8 +21,6 @@ describe('Component: Product Search', function(){
         var productSearchCtrl;
         beforeEach(inject(function($controller){
             productSearchCtrl = $controller('ProductSearchCtrl', {
-                ocParameters: ocParametersService,
-                $scope: scope,
                 ProductList: {
                     Items:['product1', 'product2'],
                     Meta:{
@@ -34,14 +32,14 @@ describe('Component: Product Search', function(){
             spyOn(state, 'go');
             spyOn(ocParametersService, 'Create');
         }));
-        describe('filter', function(){
+        describe('vm.filter', function(){
             it('should reload state and call ocParameters.Create with any parameters', function(){
                 productSearchCtrl.filter(true);
                 expect(state.go).toHaveBeenCalled();
                 expect(ocParametersService.Create).toHaveBeenCalledWith(mock.Parameters, true);
             });
         });
-        describe('updateSort', function(){
+        describe('vm.updateSort', function(){
             it('should reload page with value and sort order, if both are defined', function(){
                 mock.Parameters.sortBy = '!ID';
                 productSearchCtrl.updateSort('!ID');
@@ -55,7 +53,7 @@ describe('Component: Product Search', function(){
                 expect(ocParametersService.Create).toHaveBeenCalledWith(mock.Parameters, false);
             });
         });
-        describe('updatePageSize', function(){
+        describe('vm.updatePageSize', function(){
             it('should reload state with the new pageSize', function(){
                 mock.Parameters.pageSize = '25';
                 productSearchCtrl.updatePageSize('25');
@@ -63,7 +61,7 @@ describe('Component: Product Search', function(){
                 expect(ocParametersService.Create).toHaveBeenCalledWith(mock.Parameters, true);
             });
         });
-        describe('pageChanged', function(){
+        describe('vm.pageChanged', function(){
             it('should reload state with the new page', function(){
                 mock.Parameters.page = 'newPage';
                 productSearchCtrl.pageChanged('newPage');
@@ -71,7 +69,7 @@ describe('Component: Product Search', function(){
                 expect(ocParametersService.Create).toHaveBeenCalledWith(mock.Parameters, false);
             });
         });
-        describe('reverseSort', function(){
+        describe('vm.reverseSort', function(){
             it('should reload state with a reverse sort call', function(){
                 mock.Parameters.sortBy = '!ID';
                 productSearchCtrl.reverseSort();
