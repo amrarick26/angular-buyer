@@ -142,7 +142,7 @@ describe('Component: orderApprovals', function() {
         });
     });
 
-    fdescribe('Service: ocApprovals', function() {
+    describe('Service: ocApprovals', function() {
         var uibModal,
             page,
             pageSize,
