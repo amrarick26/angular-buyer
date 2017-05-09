@@ -29,8 +29,8 @@ describe('Component: ProductDetail', function(){
 
         }));
 
-        describe('addToCart', function(){
-            beforeEach( function(){
+        describe('vm.addToCart', function(){
+            beforeEach(function(){
                 var defer =  q.defer();
                 defer.resolve();
                 spyOn(lineItemHelpers,'AddItem').and.returnValue(defer.promise);
@@ -46,7 +46,7 @@ describe('Component: ProductDetail', function(){
             });
         });
 
-        describe('findPrice function', function(){
+        describe('vm.findPrice', function(){
             //set up like this for potential  addition of different quantities.
             it("finalPriceBreak should equal price of Pricebreak ", function(){
                 var possibleQuantities= [2];
