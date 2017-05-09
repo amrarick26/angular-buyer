@@ -1,5 +1,4 @@
 describe('Component: Product Search', function(){
-    var uibModalInstance = jasmine.createSpyObj('modalInstance', ['close', 'dismiss', 'result.then']);
     describe('State: productSearchResults', function(){
         var productSearchState;
         beforeEach(function(){
@@ -131,4 +130,74 @@ describe('Component: Product Search', function(){
             });
         });
     });
+    describe('Service: ocProductSearch', function() {
+        var productSearchService,
+            uibModal;
+        beforeEach(inject(function($uibModal, ocProductSearch) {
+            uibModal = $uibModal;
+            productSearchService = ocProductSearch;
+        }));
+        describe('Method: Open', function() {
+            it('should open the modal for product search', function() {
+                spyOn(uibModal, 'open').and.callThrough();
+                productSearchService.Open();
+                expect(uibModal.open).toHaveBeenCalledWith({
+                    backdrop:'static',
+                    templateUrl:'productSearch/templates/productSearch.modal.html',
+                    controller: 'ProductSearchModalCtrl',
+                    controllerAs: '$ctrl',
+                    size: '-full-screen c-productsearch-modal'
+                })
+            });
+        });
+    });
+    describe('Controller: ProductSearchModalCtrl', function() {
+        var productSearchModalCtrl,
+            catalogID,
+            uibModalInstance = jasmine.createSpyObj('modalInstance', ['close', 'dismiss']);
+        beforeEach(inject(function($controller, catalogid) {
+            catalogID = catalogid;
+            productSearchModalCtrl = $controller('ProductSearchModalCtrl', {
+                $uibModalInstance: uibModalInstance
+            });
+        }));
+        describe('vm.getSearchResults', function() {
+            beforeEach(function() {
+                var defer = q.defer();
+                defer.resolve();
+                spyOn(oc.Me, 'ListProducts').and.returnValue(defer.promise);
+                productSearchModalCtrl.getSearchResults();
+            });
+            it('should get a list of products relative to the search term', function() {
+                mock.Parameters = {
+                    catalogID: catalogID,
+                    search: productSearchModalCtrl.searchTerm,
+                    page: 1,
+                    pageSize: 5,
+                    depth: 'all'
+                };
+                expect(oc.Me.ListProducts).toHaveBeenCalledWith(mock.Parameters);
+            });
+        });
+        describe('vm.cancel', function() {
+            it('should dismiss the modal', function(){
+                productSearchModalCtrl.cancel();
+                expect(uibModalInstance.dismiss).toHaveBeenCalled();
+            });
+        });
+        describe('vm.onSelect', function() {
+            it('should close the modal with the productID', function() {
+                var productID;
+                productSearchModalCtrl.onSelect();
+                expect(uibModalInstance.close).toHaveBeenCalledWith({productID: productID});
+            })
+        });
+        describe('vm.onHardEnter', function() {
+            it('should close the modal on hard enter with the search term', function() {
+                var searchTerm;
+                productSearchModalCtrl.onHardEnter();
+                expect(uibModalInstance.close).toHaveBeenCalledWith({searchTerm: searchTerm});
+            })
+        })
+    })
 });
