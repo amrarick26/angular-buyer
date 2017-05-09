@@ -26,7 +26,7 @@ describe('Component: orders', function() {
         });
     });
 
-    fdescribe('Controller: OrdersCtrl', function(){
+    describe('Controller: OrdersCtrl', function(){
         var ordersCtrl,
             ocMedia;
         beforeEach(inject(function($controller, $ocMedia){
