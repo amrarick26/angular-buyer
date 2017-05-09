@@ -1,8 +1,10 @@
 describe('Component: orderApprovals', function() {
 
-    var _ocApprovals;
+    var _ocApprovals,
+        uibModalInstance;
     beforeEach(inject(function(ocApprovals) {
         _ocApprovals = ocApprovals;
+        uibModalInstance = jasmine.createSpyObj('modalInstance', ['close', 'dismiss', 'result.then']);
     }));
 
     describe('State: orderDetail.approvals', function() {
@@ -79,39 +81,33 @@ describe('Component: orderApprovals', function() {
     });
 
     describe('Controller: OrderApprovalsModalCtrl', function(){
-        var approvalModalCtrl,
-            exceptionHandler,
-            uibModal
-        ;
+        var approvalModalCtrl;
         beforeEach(inject(function($controller, $stateParams, $exceptionHandler){
             var intent = 'Approve',
-                orderID = 'testOrderID';
-            exceptionHandler = $exceptionHandler;
-            uibModal = jasmine.createSpyObj('modalInstance', ['close', 'dismiss', 'result.then']);
-
+                orderID = 'testOrderID',
+                exceptionHandler = $exceptionHandler,
+                defer = q.defer();
             approvalModalCtrl = $controller('ApprovalModalCtrl', {
                 Intent: intent,
                 OrderID: orderID,
                 $exceptionHandler: exceptionHandler,
-                $uibModalInstance: uibModal
+                $uibModalInstance: uibModalInstance
             });
-
-            var defer = q.defer();
             defer.resolve();
             spyOn(toastrService, 'success');
             spyOn(oc.Orders, 'Approve').and.returnValue(defer.promise);
             spyOn(oc.Orders, 'Decline').and.returnValue(defer.promise);
         }));
-        
+
         describe('vm.cancel', function(){
             it('should dismiss modal', function(){
                 approvalModalCtrl.cancel();
-                expect(uibModal.dismiss).toHaveBeenCalled();
+                expect(uibModalInstance.dismiss).toHaveBeenCalled();
             });
         });
 
         describe('vm.submit', function(){
-            it('should call OrderCloud.Orders.Submit if intent is set to "Submit"', function(){
+            it('should call OrderCloudSDK.Orders.Submit if intent is set to "Submit"', function(){
                 approvalModalCtrl.intent = 'Approve';
                 approvalModalCtrl.orderID = 'testOrderID';
                 var direction = 'outgoing',
@@ -119,7 +115,7 @@ describe('Component: orderApprovals', function() {
                 approvalModalCtrl.submit(); 
                 expect(oc.Orders.Approve).toHaveBeenCalledWith(direction, approvalModalCtrl.orderID, {comments: comments});
             });
-            it('should call OrderCloud.Orders.Decline if intent is set to "Decline"', function(){
+            it('should call OrderCloudSDK.Orders.Decline if intent is set to "Decline"', function(){
                 approvalModalCtrl.intent = 'Decline';
                 approvalModalCtrl.orderID = 'testOrderID';
                 var direction = 'outgoing',
@@ -144,5 +140,68 @@ describe('Component: orderApprovals', function() {
                 expect(oc.Orders.Decline).toHaveBeenCalledWith(direction, approvalModalCtrl.orderID, {comments: comments});
             });
         });
+    });
+
+    fdescribe('Service: ocApprovals', function() {
+        var uibModal,
+            page,
+            pageSize,
+            IDs,
+            buyerID;
+        beforeEach(inject(function($uibModal) {
+            uibModal = $uibModal;
+        }));
+        it('should define methods', function(){
+            expect(_ocApprovals.List).toBeDefined();
+            expect(_ocApprovals.List).toEqual(jasmine.any(Function));
+        });
+        describe('Method: List', function() {
+            beforeEach(function() {
+                var defer = q.defer();
+                defer.resolve();
+                spyOn(oc.Orders, 'ListApprovals').and.returnValue(defer.promise);
+                spyOn(oc.UserGroups, 'List');
+                spyOn(oc.Users, 'List');
+                spyOn(oc.ApprovalRules, 'List');
+            });
+            it('should get a list of approvals from the order', function() {
+                var direction = 'outgoing',
+                    orderID,
+                    params = {
+                        page: page,
+                        pageSize: pageSize,
+                        sortBy: 'Status'
+                    };
+                _ocApprovals.List();
+                expect(oc.Orders.ListApprovals).toHaveBeenCalledWith(direction, orderID, params);
+            });
+            it('should get a list of user groups based on ApprovingGroupIDs returned from oc.Orders.ListApprovals', function() {
+                _ocApprovals.List();
+                var params = {
+                    page: 1,
+                    pageSize: 100,
+                    filters: {
+                        ID: IDs
+                    }
+                };
+                expect(oc.UserGroups.List).toHaveBeenCalledWith(buyerID, params);
+            })
+        });
+        describe('Method: UpdateApprovalStatus', function() {
+            it('should open the modal to update the approval status', function() {
+                spyOn(uibModal, 'open').and.callThrough();
+                _ocApprovals.UpdateApprovalStatus();
+                expect(uibModal.open).toHaveBeenCalledWith({
+                    templateUrl: 'orders/orderApprovals/templates/approve.modal.html',
+                    controller: 'ApprovalModalCtrl',
+                    controllerAs: 'approvalModal',
+                    size: 'md',
+                    resolve: {
+                        OrderID: jasmine.any(Function),
+                        Intent: jasmine.any(Function)
+                    }
+                })
+            });
+        })
     });
 });
