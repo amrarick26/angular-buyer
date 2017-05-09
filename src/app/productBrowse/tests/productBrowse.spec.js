@@ -183,5 +183,28 @@ describe('Component: ProductBrowse', function(){
                     });
             })
         })
+    });
+    describe('Controller: MobileCategoryModalCtrl', function() {
+        var mobileCategoryModalCtrl,
+            treeConfig,
+            uibModalInstance = jasmine.createSpyObj('modalInstance', ['close', 'dismiss', 'result.then']);
+        beforeEach(inject(function($controller, TreeConfig) {
+            treeConfig = TreeConfig;
+            mobileCategoryModalCtrl = $controller('MobileCategoryModalCtrl', {
+                $uibModalInstance: uibModalInstance
+            });
+        }));
+        describe('vm.cancel', function() {
+            it('should dismiss the modal', function() {
+                mobileCategoryModalCtrl.cancel();
+                expect(uibModalInstance.dismiss).toHaveBeenCalled();
+            });
+        });
+        describe('vm.selectNode', function() {
+            it('should close the modal with the categoryID data', function() {
+                mobileCategoryModalCtrl.selectNode(node);
+                expect(uibModalInstance.close).toHaveBeenCalledWith(node);
+            })
+        })
     })
 });
