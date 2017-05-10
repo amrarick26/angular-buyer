@@ -58,8 +58,8 @@ describe('Component: myPayments', function() {
                 ocAuthNet : authNet
             });
             var defer = q.defer();
-             defer.resolve(data);
-             spyOn(authNet, 'CreateCreditCard').and.returnValue(defer.promise);
+            defer.resolve(data);
+            spyOn(authNet, 'CreateCreditCard').and.returnValue(defer.promise);
         }));
         describe('cancel', function(){
             it('should dismiss the modal', function(){
@@ -101,11 +101,9 @@ describe('Component: myPayments', function() {
             };
             ccUtility = ocCreditCardUtility;
             authNet = ocAuthNet;
-            //exceptionHandler = $exceptionHandler;
 
             EditCreditCardModalCtrl = $controller('EditCreditCardModalCtrl', {
                 $q: q,
-                //$exceptionHandler: exceptionHandler,
                 $uibModalInstance: uibModalInstance,
                 ocAuthNet: authNet,
                 ocCreditCardUtility: ccUtility,

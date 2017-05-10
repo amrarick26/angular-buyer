@@ -34,52 +34,17 @@ describe('Component: myPayments', function() {
     describe('Controller: MyPaymentsController', function() {
         var myPaymentCtrl,
             authNet,
-            mockCreditCard,
-            mockSpendingAccount,
-            mockGiftCard,
             mockCCresponse,
             mockSAresponse,
             mockGCresponse,
-            myPaymentCCModal
-        ;
+            myPaymentCCModal;
 
         beforeEach(inject(function($controller, ocAuthNet, ocMyCreditCards) {
             authNet = ocAuthNet;
             myPaymentCCModal = ocMyCreditCards;
-            mockCreditCard =   {
-                "ID": "testCompanyACard",
-                "Editable": true,
-                "Token": null,
-                "DateCreated": "2016-12-07T17:49:28.73+00:00",
-                "CardType": "visa",
-                "PartialAccountNumber": "123",
-                "CardholderName": "CompanyA",
-                "ExpirationDate": "2016-02-20T00:00:00+00:00",
-                "xp": null
-            };
-            mockSpendingAccount =  {
-                "ID": "1bXwQHDke0SF4LRPzCpDcQ",
-                "Name": "Gift Card Expires Next Month",
-                "Balance": 20,
-                "AllowAsPaymentMethod": true,
-                "RedemptionCode": null,
-                "StartDate": "2016-12-01T00:00:00+00:00",
-                "EndDate": "2017-02-02T00:00:00+00:00",
-                "xp": null
-            };
-            mockGiftCard =  {
-                    "ID": "1bXwQHDke0SF4LRPzCpDcQ",
-                    "Name": "Gift Card Expires Next Month",
-                    "Balance": 20,
-                    "AllowAsPaymentMethod": true,
-                    "RedemptionCode": "Hello",
-                    "StartDate": "2016-12-01T00:00:00+00:00",
-                    "EndDate": "2017-02-02T00:00:00+00:00",
-                    "xp": null
-            };
-            mockCCresponse = {Items:[mockCreditCard]};
-            mockSAresponse = {Items:[mockSpendingAccount]};
-            mockGCresponse = {Items:[mockGiftCard]};
+            mockCCresponse = {Items:[mock.CreditCard]};
+            mockSAresponse = {Items:[mock.SpendingAcct]};
+            mockGCresponse = {Items:[mock.GiftCard]};
             myPaymentCtrl = $controller('MyPaymentsCtrl', {
                 UserCreditCards : mockCCresponse,
                 UserSpendingAccounts : mockSAresponse,
@@ -98,22 +63,21 @@ describe('Component: myPayments', function() {
                 var df = q.defer();
                 df.resolve("NEW_CREDIT_CARD");
                 spyOn(myPaymentCCModal, 'Create').and.returnValue(df.promise);
-                // spyOn(oc.Payments, 'List').and.returnValue(df.promise);
                 myPaymentCtrl.createCreditCard();
             });
             it('should call the create credit card modal and add the new credit card to the view model', function(){
                 expect(myPaymentCCModal.Create).toHaveBeenCalled();
                 scope.$digest();
                 expect(toastrService.success).toHaveBeenCalled();
-                expect(myPaymentCtrl.personalCreditCards).toEqual({Items:[mockCreditCard, "NEW_CREDIT_CARD"]});
+                expect(myPaymentCtrl.personalCreditCards).toEqual({Items:[mock.CreditCard, "NEW_CREDIT_CARD"]});
             });
         });
         describe('Edit a Credit Card', function(){
             beforeEach(function(){
-                var df = q.defer();
-                df.resolve("EDITED_CREDIT_CARD");
-                spyOn(myPaymentCCModal, 'Edit').and.returnValue(df.promise);
-                myPaymentCtrl.edit({$index: 0, creditCard:mockCreditCard});
+                var defer = q.defer();
+                defer.resolve("EDITED_CREDIT_CARD");
+                spyOn(myPaymentCCModal, 'Edit').and.returnValue(defer.promise);
+                myPaymentCtrl.edit({$index: 0, creditCard:mock.CreditCard});
             });
             it('should call the edit credit card modal then replace the old credit card in the array', function(){
                 expect(myPaymentCCModal.Edit).toHaveBeenCalled();
@@ -122,6 +86,20 @@ describe('Component: myPayments', function() {
                 expect(myPaymentCtrl.personalCreditCards).toEqual({Items:["EDITED_CREDIT_CARD"]});
             })
         });
+        describe('Delete a Credit Card', function() {
+            beforeEach(function() {
+                var defer = q.defer();
+                defer.resolve("DELETED_CREDIT_CARD");
+                spyOn(ocConfirmService, 'Confirm').and.returnValue(defer.promise);
+                spyOn(authNet, 'DeleteCreditCard');
+                myPaymentCtrl.delete({$index: 0, creditCard:mock.CreditCard})
+            });
+            it('should call the ocConfirm, then delete the credit card', function() {
+                expect(ocConfirmService.Confirm).toHaveBeenCalled();
+                scope.$digest();
+                expect(authNet.DeleteCreditCard).toHaveBeenCalledWith(mock.CreditCard);
+            })
+        })
     });
 });
 

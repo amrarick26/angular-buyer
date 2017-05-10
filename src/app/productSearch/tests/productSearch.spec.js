@@ -78,8 +78,7 @@ describe('Component: Product Search', function(){
     });
     describe('Component Directive: ordercloudProductSearch', function(){
         var productSearchComponentCtrl,
-            catalogID
-        ;
+            catalogID;
         beforeEach(inject(function($componentController, catalogid){
             catalogID = catalogid;
             productSearchComponentCtrl = $componentController('ordercloudProductSearch', {
@@ -90,9 +89,7 @@ describe('Component: Product Search', function(){
         }));
         describe('getSearchResults', function(){
             beforeEach(function(){
-                var defer = q.defer();
-                defer.resolve();
-                spyOn(oc.Me, 'ListProducts').and.returnValue(defer.promise);
+                spyOn(oc.Me, 'ListProducts').and.returnValue(dummyPromise);
             });
             it('should call Me.ListProducts with given search term and max products', function(){
                 mock.Parameters = {
@@ -158,14 +155,13 @@ describe('Component: Product Search', function(){
         beforeEach(inject(function($controller, catalogid) {
             catalogID = catalogid;
             productSearchModalCtrl = $controller('ProductSearchModalCtrl', {
-                $uibModalInstance: uibModalInstance
+                $uibModalInstance: uibModalInstance,
+                $scope: scope
             });
         }));
         describe('vm.getSearchResults', function() {
             beforeEach(function() {
-                var defer = q.defer();
-                defer.resolve();
-                spyOn(oc.Me, 'ListProducts').and.returnValue(defer.promise);
+                spyOn(oc.Me, 'ListProducts').and.returnValue(dummyPromise);
                 productSearchModalCtrl.getSearchResults();
             });
             it('should get a list of products relative to the search term', function() {
