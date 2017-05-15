@@ -1,137 +1,71 @@
 describe('Component: Checkout Confirmation', function() {
-    var scope,
-        q,
-        oc,
-        lineItemHelpers,
-        lineItemsList,
-        orderPayments,
-        order,
-        submittedOrder,
-        address;
-    beforeEach(module('orderCloud'));
-    beforeEach(module('orderCloud.sdk'));
-    beforeEach(module(function($provide) {
-        $provide.value('OrderPayments', {
-            Items: [{Type: 'CreditCard', CreditCardID: 'CC123'}, {Type: 'SpendingAccount', SpendingAccountID: 'SA123'}],
-            Meta: {
-                Page: 1,
-                PageSize: 20,
-                TotalCount: 0,
-                TotalPages: 1,
-                ItemRange: [1, 0]
-            }
-        });
-        $provide.value('SubmittedOrder', {
-            ID: 'SubmittedOrder123',
-            BillingAddressID: 'TestAddress123456789',
-            ShippingAddressID: 'TestAddress123456789',
-            BillingAddress: {
-                ID: 'TestAddress123456789'
-            }
-        });
-    }));
-    beforeEach(inject(function($q, $rootScope, OrderCloud, ocLineItems, SubmittedOrder, OrderPayments) {
-        q = $q;
-        oc = OrderCloud;
-        scope = $rootScope.$new();
-        lineItemHelpers = ocLineItems;
-        submittedOrder = SubmittedOrder;
-        orderPayments = OrderPayments;
-        order = {
-            ID: 'TestOrder123456789',
-            Type: 'Standard',
-            FromUserID: 'TestUser123456789',
-            BillingAddressID: 'TestAddress123456789',
-            BillingAddress: {
-                ID: 'TestAddress123456789'
-            },
-            ShippingAddressID: 'TestAddress123456789',
-            Comments: null,
-            ShippingCost: null,
-            TaxCost: null,
-            Subtotal: 10,
-            Total: 10
-        };
-        lineItemsList = {
-            Items : [{ID: '1'}, {ID: '2'}],
-            Meta : {
-                Page: 1,
-                PageSize: 20,
-                TotalCount: 2,
-                TotalPages: 1,
-                ItemRange: [1,2]
-            }
-        };
-        address = {
-            ID: 'TestAddress123456789'
-        };
-    }));
 
-    describe('State: confirmation', function() {
-        var state, stateParams;
-        beforeEach(inject(function($state, $stateParams) {
-            state = $state.get('confirmation');
-            stateParams = $stateParams;
-            stateParams.orderid = "SubmittedOrder123";
+    fdescribe('State: confirmation', function() {
+        var confirmationState,
+            direction,
+            orderID;
+        beforeEach(inject(function() {
+            confirmationState = state.get('confirmation');
+            orderPayments = {
+                Items: [{CreditCardID: 'mockCC_ID'}, {SpendingAccountID: 'mockSA_ID'}]
+            };
+            direction = 'outgoing';
+
             var submittedOrderDefer = q.defer();
-            submittedOrderDefer.resolve(submittedOrder);
-            spyOn(oc.Me, 'GetOrder').and.returnValue(submittedOrderDefer.promise);
+            submittedOrderDefer.resolve(orderID);
+            spyOn(oc.Orders, 'Get').and.returnValue(submittedOrderDefer.promise);
 
-            var defer = q.defer();
-            defer.resolve();
-            spyOn(oc.Me, 'GetAddress').and.returnValue(defer.promise);
-            spyOn(oc.Orders, 'ListPromotions').and.returnValue(defer.promise);
+
+            spyOn(oc.Me, 'GetAddress').and.returnValue(dummyPromise);
+            spyOn(oc.Orders, 'ListPromotions').and.returnValue(dummyPromise);
 
             var paymentsDefer = q.defer();
             paymentsDefer.resolve(orderPayments);
             spyOn(oc.Payments, 'List').and.returnValue(paymentsDefer.promise);
-            spyOn(oc.Me, 'GetCreditCard').and.returnValue(defer.promise);
-            spyOn(oc.Me, 'GetSpendingAccount').and.returnValue(defer.promise);
+            spyOn(oc.Me, 'GetCreditCard').and.returnValue(dummyPromise);
+            spyOn(oc.Me, 'GetSpendingAccount').and.returnValue(dummyPromise);
 
             var lineItemListDefer = q.defer();
-            lineItemListDefer.resolve(lineItemsList);
+            lineItemListDefer.resolve(mock.LineItems.Items);
             spyOn(oc.LineItems, 'List').and.returnValue(lineItemListDefer.promise);
-            spyOn(lineItemHelpers, 'GetProductInfo').and.returnValue(lineItemListDefer.promise);
         }));
-        it('should call Me.GetOrder for submitted order', inject(function($injector) {
-            $injector.invoke(state.resolve.SubmittedOrder);
-            expect(oc.Me.GetOrder).toHaveBeenCalledWith('SubmittedOrder123');
-        }));
-        it('should call Me.GetAddress for ShippingAddressID', inject(function($injector) {
-            $injector.invoke(state.resolve.OrderShipAddress);
-            expect(oc.Me.GetAddress).toHaveBeenCalledWith(submittedOrder.ShippingAddressID);
-        }));
-        it('should call Orders.ListPromotions', inject(function($injector) {
-            $injector.invoke(state.resolve.OrderPromotions);
-            expect(oc.Orders.ListPromotions).toHaveBeenCalledWith(submittedOrder.ID);
-        }));
-        it('should call Me.GetAddress for BillingAddressID', inject(function($injector) {
-            $injector.invoke(state.resolve.OrderBillingAddress);
-            expect(oc.Me.GetAddress).toHaveBeenCalledWith(submittedOrder.BillingAddressID);
-        }));
-        it('should call Payments.List', inject(function($injector) {
-            $injector.invoke(state.resolve.OrderPayments);
-            expect(oc.Payments.List).toHaveBeenCalledWith(submittedOrder.ID);
-        }));
-        it('should call Me.GetCreditCard for first payment', inject(function($injector) {
-            $injector.invoke(state.resolve.OrderPayments);
+        it('should call Me.Get for submitted order', function() {
+            injector.invoke(confirmationState.resolve.SubmittedOrder);
+            expect(oc.Orders.Get).toHaveBeenCalledWith(direction, orderID);
+        });
+        it('should call Me.GetAddress for ShippingAddressID', function() {
+            injector.invoke(confirmationState.resolve.OrderShipAddress);
+            expect(oc.Me.GetAddress).toHaveBeenCalledWith(mock.SubmittedOrder.ShippingAddressID);
+        });
+        it('should call Orders.ListPromotions', function() {
+            injector.invoke(confirmationState.resolve.OrderPromotions);
+            expect(oc.Orders.ListPromotions).toHaveBeenCalledWith(direction, mock.Order.ID);
+        });
+        it('should call Me.GetAddress for BillingAddressID', function() {
+            injector.invoke(confirmationState.resolve.OrderBillingAddress);
+            expect(oc.Me.GetAddress).toHaveBeenCalledWith(mock.SubmittedOrder.BillingAddressID);
+        });
+        it('should call Payments.List', function() {
+            injector.invoke(confirmationState.resolve.OrderPayments);
+            expect(oc.Payments.List).toHaveBeenCalledWith(direction, mock.SubmittedOrder.ID);
+        });
+        it('should call Me.GetCreditCard for first payment', function() {
+            injector.invoke(confirmationState.resolve.OrderPayments);
             scope.$digest();
             expect(oc.Me.GetCreditCard).toHaveBeenCalledWith(orderPayments.Items[0].CreditCardID);
-        }));
-        it('should call Me.GetSpendingAccount for second payment', inject(function($injector) {
-            $injector.invoke(state.resolve.OrderPayments);
+        });
+        it('should call Me.GetSpendingAccount for second payment', function() {
+            injector.invoke(confirmationState.resolve.OrderPayments);
             scope.$digest();
             expect(oc.Me.GetSpendingAccount).toHaveBeenCalledWith(orderPayments.Items[1].SpendingAccountID);
-        }));
-        it('should call LineItems.List',inject(function($injector){
-            $injector.invoke(state.resolve.LineItemsList);
-            expect(oc.LineItems.List).toHaveBeenCalledWith(submittedOrder.ID);
-        }));
-        it('should call LineItemHelper', inject(function($injector){
-            $injector.invoke(state.resolve.LineItemsList);
-            scope.$digest();
-            expect(lineItemHelpers.GetProductInfo).toHaveBeenCalled();
-        }));
+        });
+        it('should call LineItems.List', function(){
+            var parameters = {
+                pageSize: 100
+            };
+            injector.invoke(confirmationState.resolve.LineItemsList);
+            expect(oc.LineItems.List).toHaveBeenCalledWith(direction, mock.SubmittedOrder.ID, parameters);
+        });
     });
 
     describe('Controller: ConfirmationCtrl', function(){

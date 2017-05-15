@@ -10,6 +10,7 @@ var q,
     currentOrder,
     currentUser,
     orderLineItems,
+    submittedOrder,
     ocAppNameService,
     ocConfirmService,
     ocParametersService,
@@ -24,11 +25,12 @@ beforeEach(module('orderCloud', function($provide) {
     $provide.value('CurrentOrder', mock.Order);
     $provide.value('Parameters', mock.Parameters);
     $provide.value('OrderLineItems', mock.LineItems);
+    $provide.value('SubmittedOrder', mock.SubmittedOrder);
 }));
 beforeEach(module('ordercloud-angular-sdk'));
 beforeEach(inject(function($q, $rootScope, $state, $injector, $exceptionHandler, toastr, 
 OrderCloudSDK, ocAppName, ocConfirm, ocParameters, ocRoles, Parameters, CurrentOrder,
-CurrentUser, OrderLineItems) {
+CurrentUser, OrderLineItems, SubmittedOrder) {
     q = $q;
     scope = $rootScope.$new();
     rootScope = $rootScope;
@@ -45,6 +47,7 @@ CurrentUser, OrderLineItems) {
     currentOrder = CurrentOrder;
     currentUser = CurrentUser;
     orderLineItems = OrderLineItems;
+    submittedOrder = SubmittedOrder;
     var defer = $q.defer();
     defer.resolve('FAKE_RESPONSE');
     dummyPromise = defer.promise;
@@ -101,6 +104,9 @@ function _mockData() {
                 FavoriteProducts: ['FavProd1', 'FavProd2']
             }
         },
+        Address: {
+            ID: 'mockAddress'
+        },
         LineItems: {
             Items: [
                 {ID: 'testLI1'},
@@ -127,8 +133,28 @@ function _mockData() {
             ShippingCost: null,
             TaxCost: null
         },
+        SubmittedOrder: {
+            ID: 'ORDER_ID',
+            Type: "ORDER_TYPE",
+            FromUserID: "ORDER_FROM_USER_ID",
+            BillingAddressID: "ORDER_BILLING_ADDRESS_ID",
+            ShippingAddressID: "ORDER_SHIPPING_ADDRESS_ID",
+            SpendingAccountID: null,
+            Comments: null,
+            PaymentMethod: null,
+            CreditCardID: null,
+            ShippingCost: null,
+            TaxCost: null
+        },
         LineItem: {
-            ID: 'LINEITEM_ID'
+            Items: [{ID: 'LINEITEM_ID'}, {ID: 'LINEITEM_ID2'}],
+            Meta : {
+                Page: 1,
+                PageSize: 20,
+                TotalCount: 2,
+                TotalPages: 1,
+                ItemRange: [1,2]
+            }
         },
         Promotion: {
             Code:'Discount10'
