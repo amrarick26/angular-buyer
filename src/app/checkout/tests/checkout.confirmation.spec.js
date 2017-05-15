@@ -1,6 +1,6 @@
 describe('Component: Checkout Confirmation', function() {
 
-    fdescribe('State: confirmation', function() {
+    describe('State: confirmation', function() {
         var confirmationState,
             direction,
             orderID;
@@ -70,7 +70,6 @@ describe('Component: Checkout Confirmation', function() {
 
     describe('Controller: ConfirmationCtrl', function(){
         var confirmCtrl,
-            SubmittedOrder = 'FAKE_ORDER',
             OrderShipAddress = 'FAKE_SHIP_ADDRESS',
             OrderPromotions = {Items: 'FAKE_PROMOTIONS'},
             OrderBillingAddress = 'FAKE_BILL_ADDRESS',
@@ -78,7 +77,6 @@ describe('Component: Checkout Confirmation', function() {
             LineItemsList = 'FAKE_LINE_ITEMS';
         beforeEach(inject(function($controller) {
             confirmCtrl = $controller('CheckoutConfirmationCtrl', {
-                SubmittedOrder: SubmittedOrder,
                 OrderShipAddress: OrderShipAddress,
                 OrderPromotions: OrderPromotions,
                 OrderBillingAddress: OrderBillingAddress,
@@ -87,7 +85,7 @@ describe('Component: Checkout Confirmation', function() {
             });
         }));
         it ('should initialize the resolves into the controller view model', function() {
-            expect(confirmCtrl.order).toBe(SubmittedOrder);
+            expect(confirmCtrl.order).toBe(mock.SubmittedOrder);
             expect(confirmCtrl.shippingAddress).toBe(OrderShipAddress);
             expect(confirmCtrl.promotions).toBe('FAKE_PROMOTIONS');
             expect(confirmCtrl.billingAddress).toBe(OrderBillingAddress);
